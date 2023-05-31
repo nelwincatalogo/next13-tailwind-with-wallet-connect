@@ -1,4 +1,4 @@
-# Next13-Tailwind Starter Template
+# Next13-Tailwind with Wallet Connect Starter Template
 
 <p align="center">
   <img src="https://res.cloudinary.com/practicaldev/image/fetch/s--9bipHLLn--/c_imagga_scale,f_auto,fl_progressive,h_420,q_auto,w_1000/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/wwy6cp17cco1zk8wn0kb.jpeg" alt="twin, next, styled-components" width="500">
@@ -9,13 +9,13 @@
 Run the following command to bootstrap your next-app using this template:
 
 ```bash
-yarn create next-app [project-name] -e https://github.com/nelwincatalogo/next13-tailwind
+yarn create next-app [project-name] -e https://github.com/nelwincatalogo/next13-tailwind-with-wallet-connect
 ```
 
 OR
 
 ```bash
-npx create-next-app [project-name] -e https://github.com/nelwincatalogo/next13-tailwind
+npx create-next-app [project-name] -e https://github.com/nelwincatalogo/next13-tailwind-with-wallet-connect
 ```
 
 ## Summary
@@ -33,5 +33,5 @@ npx create-next-app [project-name] -e https://github.com/nelwincatalogo/next13-t
 - Lint on pre-commit
   - Husky
   - pretty-quick
-- Default Font [Poppins, Inter]
+- Default Font [Inter]
 - TypeScript Support
