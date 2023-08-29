@@ -1,23 +1,14 @@
 'use client';
 
-import { transitions, positions, Provider as AlertProvider } from 'react-alert';
-import AlertTemplate from '@/components/AlertTemplate';
 import { WalletProvider } from '@/context/wallet';
 
 import '@/styles/globals.css';
 import { Inter } from 'next/font/google';
 import { useEffect, useState } from 'react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.min.css';
 
 const inter = Inter({ subsets: ['latin'] });
-
-const options = {
-  // you can also just use 'bottom center'
-  position: positions.TOP_RIGHT,
-  timeout: 2500,
-  offset: '20px',
-  // you can also just use 'scale'
-  transition: transitions.FADE,
-};
 
 declare global {
   interface Window {
@@ -53,9 +44,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AlertProvider template={AlertTemplate} {...options}>
-          <WalletProvider>{children}</WalletProvider>
-        </AlertProvider>
+        <WalletProvider>{children}</WalletProvider>
+        <ToastContainer />
       </body>
     </html>
   );

@@ -1,7 +1,6 @@
 'use client';
 
-import { useAlert } from 'react-alert';
-import { configureChains, useAccount, WagmiConfig, createClient } from 'wagmi';
+import { configureChains, WagmiConfig, createConfig } from 'wagmi';
 import { InjectedConnector } from 'wagmi/connectors/injected';
 import { WalletConnectConnector } from 'wagmi/connectors/walletConnect';
 import { MetaMaskConnector } from 'wagmi/connectors/metaMask';
@@ -11,22 +10,26 @@ import {
   disconnect,
   signMessage,
   watchAccount,
-  getProvider,
-  fetchSigner,
+  getPublicClient,
+  getWalletClient,
 } from '@wagmi/core';
 
 import CONFIG from '@/config';
 import { useGlobalState } from '@/store';
 import axios, { BLOCKCHAIN } from '@/api';
 import { ConnectKitProvider } from 'connectkit';
+import { toast } from 'react-toastify';
 
-const { chains, provider, webSocketProvider } = configureChains(
+const { chains, publicClient, webSocketPublicClient } = configureChains(
   CONFIG.setting.supported_chains,
   CONFIG.setting.providers
 );
 
-const client = createClient({
+const config = createConfig({
   autoConnect: false,
+  logger: {
+    warn: null,
+  },
   connectors: [
     new InjectedConnector({ chains }),
     new MetaMaskConnector({
@@ -40,18 +43,15 @@ const client = createClient({
       },
     }),
   ],
-  provider,
-  webSocketProvider,
+  publicClient,
+  webSocketPublicClient,
 });
 
 export const WalletContext = createContext<any>({});
 export const useWalletContext = () => useContext(WalletContext);
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
-  const alert = useAlert();
   const gState = useGlobalState();
-  const { address, isConnecting, isDisconnected, isConnected, status } =
-    useAccount();
   const [ctxContract, setCtxContract] = useState(null as any);
 
   /**
@@ -100,16 +100,18 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   const loadContract = async () => {
     try {
-      const provider = getProvider();
-      const signer = await fetchSigner();
+      const publicClient = getPublicClient();
+      const walletClient = await getWalletClient();
 
       const nft = getContract({
         ...gState['contracts']['nft'].get({ noproxy: true }),
-        signerOrProvider: signer || provider,
+        publicClient,
+        walletClient,
       });
       const busd = getContract({
         ...gState['contracts']['busd'].get({ noproxy: true }),
-        signerOrProvider: signer || provider,
+        publicClient,
+        walletClient,
       });
 
       setCtxContract({
@@ -158,7 +160,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         })
         .then((res) => res.data);
 
-      alert.info(_metamaskReq.message);
+      toast.info(_metamaskReq.message);
       const signature = await signMessage({
         message: _metamaskReq.data,
       });
@@ -171,7 +173,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         })
         .then((res) => res.data);
 
-      alert.success(verify.message);
+      toast.success(verify.message);
       localStorage.setItem('token', verify.token);
       gState['verify'].set(verify);
     } catch (error) {
@@ -218,19 +220,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   return (
     <WalletContext.Provider
       value={{
-        alert,
-        address,
-        isConnected,
-        isConnecting,
-        isDisconnected,
-        status,
+        toast,
         ctxContract,
         onLoad,
         onWalletConnected,
         Disconnect,
       }}
     >
-      <WagmiConfig client={client}>
+      <WagmiConfig config={config}>
         <ConnectKitProvider>{children}</ConnectKitProvider>
       </WagmiConfig>
     </WalletContext.Provider>

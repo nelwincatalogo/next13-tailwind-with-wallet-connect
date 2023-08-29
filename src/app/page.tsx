@@ -1,31 +1,33 @@
 'use client';
 
-import ReactAlertSample from '@/components/ReactAlertSample';
+import config from '@/config';
 import { useWalletContext } from '@/context/wallet';
 import { useGlobalState } from '@/store';
 import { useHookstate } from '@hookstate/core';
 import { ConnectKitButton } from 'connectkit';
-import { BigNumber } from 'ethers';
 import { useEffect } from 'react';
+import { useAccount } from 'wagmi';
+import { getPublicClient, waitForTransaction } from '@wagmi/core';
 
 export default function Home() {
   const gState = useGlobalState();
-  const { alert, status, address, Disconnect, isDisconnected, ctxContract } =
-    useWalletContext();
+  const { status, address, isDisconnected } = useAccount();
+  const { toast, Disconnect, ctxContract } = useWalletContext();
   const balance = useHookstate(0);
   const recipient = useHookstate('');
   const amount = useHookstate(0);
 
   const getBusdBal = async () => {
     try {
-      const data = await ctxContract.busd.balanceOf(
-        address ?? '0x7893fb78A1273651105cF91d176C11a4186F137c'
-      );
+      console.log(ctxContract.busd);
+      const data = await ctxContract.busd.read.balanceOf([
+        address ?? '0x7893fb78A1273651105cF91d176C11a4186F137c',
+      ]);
       console.log('TEST: ', data);
 
       const bal = await toBUSD(data.toString());
       balance.set(bal);
-      alert.success(`Balance: ${bal}`);
+      toast.success(`Balance: ${bal}`);
     } catch (e) {
       console.error(e);
     }
@@ -34,27 +36,50 @@ export default function Home() {
   const sendBusd = async () => {
     try {
       const _amount = await toRawBUSD(amount.value);
-      console.log('TEST: ', _amount);
-      const data = await ctxContract.busd.transfer(recipient.value, _amount);
+      const publicClient = getPublicClient();
 
-      alert.success('SENT SUCCESS');
+      console.log(config.setting.supported_chains[0]);
+
+      const block = await publicClient.getBlock({
+        blockTag: 'latest',
+      });
+      console.log('block: ', block);
+
+      // const data = await ctxContract.busd.write.transfer(
+      //   [recipient.value, _amount],
+      //   {
+      //     chain: config.setting.supported_chains[0],
+      //     gasLimit: block.gasLimit,
+      //     gas: block.gasUsed,
+      //   }
+      // );
+      const data = await ctxContract.busd.write.transfer(
+        [recipient.value, _amount],
+        config.writeContract
+      );
+      const wait = await waitForTransaction({
+        hash: data,
+      });
+      console.log('Test: ', wait);
+
+      toast.success('SENT SUCCESS');
     } catch (error) {
-      alert.error(error.message);
-      console.error(error.message);
+      toast.error(error.details);
+      console.log(error);
+      console.error('TEST: ', error.details);
     } finally {
       getBusdBal();
     }
   };
 
   const toBUSD = async (price) => {
-    const usdtDecimal = await ctxContract.busd.decimals();
+    const usdtDecimal = await ctxContract.busd.read.decimals();
     return Number(price) / 10 ** Number(usdtDecimal);
   };
 
   const toRawBUSD = async (price) => {
-    const usdtDecimal = await ctxContract.busd.decimals();
-    // return Number(price) * 10 ** Number(usdtDecimal);
-    return BigNumber.from(price).mul(BigNumber.from(10).pow(usdtDecimal));
+    const usdtDecimal = await ctxContract.busd.read.decimals();
+    return Number(price) * 10 ** Number(usdtDecimal);
   };
 
   useEffect(() => {
@@ -65,12 +90,10 @@ export default function Home() {
 
   return (
     <main className="bg-gray-200">
-      <div className="min-h-screen flex gap-4 flex-col justify-center items-center">
-        <h1 className="text-red-500 font-bold text-4xl">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <h1 className="text-4xl font-bold text-red-500">
           Next-Tailwind Starter Template
         </h1>
-
-        <ReactAlertSample />
 
         {/* sample */}
         <div className="flex flex-col items-center gap-4 py-8">
@@ -81,7 +104,7 @@ export default function Home() {
                 return (
                   <button
                     onClick={show}
-                    className="py-2 px-6 bg-green-500 text-white rounded-lg hover:bg-green-600 active:scale-95"
+                    className="rounded-lg bg-green-500 px-6 py-2 text-white hover:bg-green-600 active:scale-95"
                   >
                     {isConnected ? truncatedAddress : 'Custom Connect'}
                   </button>
@@ -91,7 +114,7 @@ export default function Home() {
             {gState['verify'].value && (
               <button
                 onClick={() => Disconnect()}
-                className="py-2 px-6 bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95"
+                className="rounded-lg bg-red-500 px-6 py-2 text-white hover:bg-red-600 active:scale-95"
               >
                 Disconnect
               </button>
@@ -107,7 +130,7 @@ export default function Home() {
           <div className="flex flex-col items-center">
             <button
               onClick={getBusdBal}
-              className="py-2 px-6 bg-green-500 text-white rounded-lg hover:bg-green-600 active:scale-95"
+              className="rounded-lg bg-green-500 px-6 py-2 text-white hover:bg-green-600 active:scale-95"
             >
               GET BUSD BALANCE
             </button>
@@ -133,7 +156,7 @@ export default function Home() {
                 />
                 <button
                   onClick={sendBusd}
-                  className="py-2 px-6 bg-green-500 text-white rounded-lg hover:bg-green-600 active:scale-95"
+                  className="rounded-lg bg-green-500 px-6 py-2 text-white hover:bg-green-600 active:scale-95"
                 >
                   SEND
                 </button>

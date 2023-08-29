@@ -17,6 +17,7 @@ export const config = [
           http: `https://endpoints.omniatech.io/v1/bsc/testnet/public`,
         }),
       }),
+      publicProvider(),
     ],
   },
   {
@@ -31,4 +32,7 @@ export default {
   name: blockchainNetwork[currentNetwork],
   setting: config[currentNetwork],
   isTestnet: Number(currentNetwork) === 0,
+  writeContract: {
+    chain: config[currentNetwork].supported_chains[0],
+  },
 };
