@@ -1,8 +1,8 @@
 'use client';
 
-import config from '@/config';
+import config from '@/lib/config';
 import { useWalletContext } from '@/context/wallet';
-import { useGlobalState } from '@/store';
+import { useGlobalState } from '@/lib/store';
 import { useHookstate } from '@hookstate/core';
 import { ConnectKitButton } from 'connectkit';
 import { useEffect } from 'react';

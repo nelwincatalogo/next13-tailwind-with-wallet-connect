@@ -14,9 +14,9 @@ import {
   getWalletClient,
 } from '@wagmi/core';
 
-import CONFIG from '@/config';
-import { useGlobalState } from '@/store';
-import axios, { BLOCKCHAIN } from '@/api';
+import CONFIG from '@/lib/config';
+import { useGlobalState } from '@/lib/store';
+import axios, { BLOCKCHAIN } from '@/lib/api';
 import { ConnectKitProvider } from 'connectkit';
 import { toast } from 'react-toastify';
 
